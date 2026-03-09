@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Live Google Sheet Data</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tabletop.js/1.6.0/tabletop.min.js"></script>
+  <style>
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #333; padding: 8px; }
+    th { background: #004080; color: #fff; }
+    tr:nth-child(even) { background: #f2f2f2; }
+  </style>
+</head>
+<body>
+
+  <h2>Live Data from Google Sheet</h2>
+  <div id="sheet-data">Loading data…</div>
+
+  <script>
+  window.onload = function() {
+
+    Tabletop.init({
+      key: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSJAWO9uBRGy-t7v8oHjD2Tcigwb9m7_ShR8e93iXV-APP2nfoM2oIkMJPvmt6a3p9a2l4JL6JGKfai/pubhtml',
+      simpleSheet: true
+    })
+    .then(function(data) {
+
+      let html = '<table><tr>';
+      // headers
+      Object.keys(data[0]).forEach(h => html += `<th>${h}</th>`);
+      html += '</tr>';
+
+      // rows
+      data.forEach(row => {
+        html += '<tr>';
+        Object.values(row).forEach(cell => html += `<td>${cell}</td>`);
+        html += '</tr>';
+      });
+
+      html += '</table>';
+      document.getElementById('sheet-data').innerHTML = html;
+
+    })
+    .catch(function(error) {
+      console.error(error);
+      document.getElementById('sheet-data').innerText = 'Failed to load data.';
+    });
+
+  }
+  </script>
+
+</body>
+</html>
