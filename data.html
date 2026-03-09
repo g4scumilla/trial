@@ -3,12 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <title>Live Google Sheet Data</title>
+  <!-- Tabletop.js to read Google Sheets -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tabletop.js/1.6.0/tabletop.min.js"></script>
   <style>
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #333; padding: 8px; }
-    th { background: #004080; color: #fff; }
-    tr:nth-child(even) { background: #f2f2f2; }
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h2 { color: #004080; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #333; padding: 8px; text-align: left; }
+    th { background-color: #004080; color: white; }
+    tr:nth-child(even) { background-color: #f2f2f2; }
+    tr:hover { background-color: #ddd; }
   </style>
 </head>
 <body>
@@ -20,17 +24,23 @@
   window.onload = function() {
 
     Tabletop.init({
-      key: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSJAWO9uBRGy-t7v8oHjD2Tcigwb9m7_ShR8e93iXV-APP2nfoM2oIkMJPvmt6a3p9a2l4JL6JGKfai/pubhtml',
+      // ✅ Use the classic pubhtml link with Sheet ID
+      key: 'https://docs.google.com/spreadsheets/d/1NouBT8vyn3ndJMCm78qQSHI6F9KG3XIJEESw3fbtTEk/pubhtml',
       simpleSheet: true
     })
     .then(function(data) {
+      if(!data || data.length === 0){
+        document.getElementById('sheet-data').innerText = 'No data found in sheet.';
+        return;
+      }
 
       let html = '<table><tr>';
-      // headers
+
+      // Headers
       Object.keys(data[0]).forEach(h => html += `<th>${h}</th>`);
       html += '</tr>';
 
-      // rows
+      // Rows
       data.forEach(row => {
         html += '<tr>';
         Object.values(row).forEach(cell => html += `<td>${cell}</td>`);
