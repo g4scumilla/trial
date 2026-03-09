@@ -6,8 +6,9 @@
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     h2 { color: #004080; }
-    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-    th, td { border: 1px solid #333; padding: 8px; text-align: left; }
+    input { padding: 8px; margin-bottom: 10px; width: 300px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    th, td { border: 1px solid #333; padding: 8px; text-align: left; cursor: pointer; }
     th { background-color: #004080; color: white; }
     tr:nth-child(even) { background-color: #f2f2f2; }
     tr:hover { background-color: #ddd; }
@@ -15,41 +16,71 @@
 </head>
 <body>
 
-  <h2>Live Data from Google Sheet</h2>
-  <div id="sheet-data">Loading data…</div>
+<h2>Live Data from Google Sheet</h2>
 
-  <script>
-  const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSJAWO9uBRGy-t7v8oHjD2Tcigwb9m7_ShR8e93iXV-APP2nfoM2oIkMJPvmt6a3p9a2l4JL6JGKfai/pub?output=csv';
+<input type="text" id="search" placeholder="Filter table…">
 
-  fetch(csvUrl)
-    .then(response => response.text())
-    .then(data => {
-      const rows = data.split('\n').map(r => r.split(','));
-      if(rows.length === 0) {
-        document.getElementById('sheet-data').innerText = 'No data found.';
-        return;
-      }
+<div id="sheet-data">Loading data…</div>
 
-      let html = '<table><tr>';
-      // headers
-      rows[0].forEach(h => html += `<th>${h}</th>`);
-      html += '</tr>';
+<script>
+const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSJAWO9uBRGy-t7v8oHjD2Tcigwb9m7_ShR8e93iXV-APP2nfoM2oIkMJPvmt6a3p9a2l4JL6JGKfai/pub?output=csv';
+let tableData = [];
 
-      // rows
-      for(let i=1; i<rows.length; i++){
-        html += '<tr>';
-        rows[i].forEach(cell => html += `<td>${cell}</td>`);
-        html += '</tr>';
-      }
+function buildTable(data) {
+  let html = '<table id="data-table"><thead><tr>';
+  Object.keys(data[0]).forEach((h, index) => html += `<th onclick="sortTable(${index})">${h}</th>`);
+  html += '</tr></thead><tbody>';
 
-      html += '</table>';
-      document.getElementById('sheet-data').innerHTML = html;
-    })
-    .catch(err => {
-      console.error(err);
-      document.getElementById('sheet-data').innerText = 'Failed to load data.';
+  data.forEach(row => {
+    html += '<tr>';
+    Object.values(row).forEach(cell => html += `<td>${cell}</td>`);
+    html += '</tr>';
+  });
+
+  html += '</tbody></table>';
+  document.getElementById('sheet-data').innerHTML = html;
+}
+
+// Load CSV and parse
+fetch(csvUrl)
+  .then(res => res.text())
+  .then(data => {
+    const rows = data.split('\n').map(r => r.split(','));
+    const headers = rows.shift();
+    tableData = rows.map(r => {
+      let obj = {};
+      r.forEach((cell, i) => obj[headers[i]] = cell);
+      return obj;
     });
-  </script>
+    buildTable(tableData);
+  })
+  .catch(err => {
+    console.error(err);
+    document.getElementById('sheet-data').innerText = 'Failed to load data.';
+  });
+
+// Search/filter
+document.getElementById('search').addEventListener('input', function() {
+  const val = this.value.toLowerCase();
+  const filtered = tableData.filter(row => Object.values(row).some(v => v.toLowerCase().includes(val)));
+  buildTable(filtered);
+});
+
+// Sort function
+function sortTable(n) {
+  const table = document.getElementById('data-table');
+  let rows = Array.from(table.tBodies[0].rows);
+  let asc = table.getAttribute('data-sort-dir') !== 'asc';
+  rows.sort((a,b) => {
+    let x = a.cells[n].innerText.toLowerCase();
+    let y = b.cells[n].innerText.toLowerCase();
+    if(!isNaN(x) && !isNaN(y)){ x = Number(x); y = Number(y); }
+    return asc ? (x > y ? 1 : -1) : (x < y ? 1 : -1);
+  });
+  rows.forEach(r => table.tBodies[0].appendChild(r));
+  table.setAttribute('data-sort-dir', asc ? 'asc' : 'desc');
+}
+</script>
 
 </body>
 </html>
