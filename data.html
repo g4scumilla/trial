@@ -3,8 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Live Google Sheet Data</title>
-  <!-- Tabletop.js to read Google Sheets -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/tabletop.js/1.6.0/tabletop.min.js"></script>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     h2 { color: #004080; }
@@ -21,42 +19,36 @@
   <div id="sheet-data">Loading data…</div>
 
   <script>
-  window.onload = function() {
+  const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSJAWO9uBRGy-t7v8oHjD2Tcigwb9m7_ShR8e93iXV-APP2nfoM2oIkMJPvmt6a3p9a2l4JL6JGKfai/pub?output=csv';
 
-    Tabletop.init({
-      // ✅ Use the classic pubhtml link with Sheet ID
-      key: 'https://docs.google.com/spreadsheets/d/1NouBT8vyn3ndJMCm78qQSHI6F9KG3XIJEESw3fbtTEk/pubhtml',
-      simpleSheet: true
-    })
-    .then(function(data) {
-      if(!data || data.length === 0){
-        document.getElementById('sheet-data').innerText = 'No data found in sheet.';
+  fetch(csvUrl)
+    .then(response => response.text())
+    .then(data => {
+      const rows = data.split('\n').map(r => r.split(','));
+      if(rows.length === 0) {
+        document.getElementById('sheet-data').innerText = 'No data found.';
         return;
       }
 
       let html = '<table><tr>';
-
-      // Headers
-      Object.keys(data[0]).forEach(h => html += `<th>${h}</th>`);
+      // headers
+      rows[0].forEach(h => html += `<th>${h}</th>`);
       html += '</tr>';
 
-      // Rows
-      data.forEach(row => {
+      // rows
+      for(let i=1; i<rows.length; i++){
         html += '<tr>';
-        Object.values(row).forEach(cell => html += `<td>${cell}</td>`);
+        rows[i].forEach(cell => html += `<td>${cell}</td>`);
         html += '</tr>';
-      });
+      }
 
       html += '</table>';
       document.getElementById('sheet-data').innerHTML = html;
-
     })
-    .catch(function(error) {
-      console.error(error);
+    .catch(err => {
+      console.error(err);
       document.getElementById('sheet-data').innerText = 'Failed to load data.';
     });
-
-  }
   </script>
 
 </body>
